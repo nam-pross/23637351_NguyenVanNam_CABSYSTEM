@@ -1,0 +1,1913 @@
+openapi: 3.0.3
+
+info:
+  title: CAB Systems API
+  description: |
+    API Documentation for CAB Systems.
+
+    CAB Systems is a ride-hailing platform that supports:
+    - Customer registration and authentication
+    - Driver registration and vehicle management
+    - Ride booking
+    - Fare estimation
+    - Driver matching and dispatching
+    - Real-time trip status
+    - Payment and transaction management
+    - Driver rating and review
+    - Operation monitoring
+    - Administration and reporting
+  version: 1.0.0
+  contact:
+    name: CAB Systems Team
+
+servers:
+  - url: http://localhost:3000/api
+    description: Local development server
+
+tags:
+  - name: Authentication
+    description: Authentication and account management
+
+  - name: Customers
+    description: Customer management
+
+  - name: Drivers
+    description: Driver management
+
+  - name: Vehicles
+    description: Vehicle management
+
+  - name: Locations
+    description: Location and geolocation services
+
+  - name: Bookings
+    description: Ride booking and trip management
+
+  - name: Driver Matching
+    description: Driver matching and dispatching
+
+  - name: Payments
+    description: Payment and transaction management
+
+  - name: Reviews
+    description: Trip rating and review
+
+  - name: Operations
+    description: Operation monitoring and incident handling
+
+  - name: Administration
+    description: User and system administration
+
+  - name: Reports
+    description: Business and financial reports
+
+paths:
+
+  # ============================================================
+  # AUTHENTICATION
+  # ============================================================
+
+  /auth/register:
+    post:
+      tags:
+        - Authentication
+      summary: Register a new customer
+      description: Create a new customer account.
+      operationId: registerCustomer
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+
+      responses:
+        '201':
+          description: Customer registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+        '409':
+          description: Email or phone number already exists
+
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: Login
+      description: Authenticate a customer, driver or administrator.
+      operationId: login
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/logout:
+    post:
+      tags:
+        - Authentication
+      summary: Logout
+      security:
+        - bearerAuth: []
+
+      responses:
+        '200':
+          description: Logout successful
+
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ============================================================
+  # CUSTOMER
+  # ============================================================
+
+  /customers/me:
+    get:
+      tags:
+        - Customers
+      summary: Get current customer profile
+      security:
+        - bearerAuth: []
+
+      responses:
+        '200':
+          description: Customer profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    put:
+      tags:
+        - Customers
+      summary: Update customer profile
+      security:
+        - bearerAuth: []
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCustomerRequest'
+
+      responses:
+        '200':
+          description: Profile updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ============================================================
+  # DRIVER
+  # ============================================================
+
+  /drivers/register:
+    post:
+      tags:
+        - Drivers
+      summary: Register as a driver
+      description: Driver submits personal and vehicle verification information.
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DriverRegistrationRequest'
+
+      responses:
+        '201':
+          description: Driver registration submitted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Driver'
+
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /drivers/me:
+    get:
+      tags:
+        - Drivers
+      summary: Get current driver profile
+      security:
+        - bearerAuth: []
+
+      responses:
+        '200':
+          description: Driver profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Driver'
+
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    put:
+      tags:
+        - Drivers
+      summary: Update driver profile
+      security:
+        - bearerAuth: []
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateDriverRequest'
+
+      responses:
+        '200':
+          description: Driver profile updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Driver'
+
+  /drivers/me/status:
+    put:
+      tags:
+        - Drivers
+      summary: Update driver online/offline status
+      description: |
+        Driver can switch between Online and Offline.
+        Only online drivers can receive ride requests.
+      security:
+        - bearerAuth: []
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DriverStatusRequest'
+
+      responses:
+        '200':
+          description: Driver status updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Driver'
+
+  /drivers/me/location:
+    put:
+      tags:
+        - Locations
+      summary: Update driver's current location
+      description: Update real-time GPS location of an online driver.
+      security:
+        - bearerAuth: []
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LocationRequest'
+
+      responses:
+        '200':
+          description: Location updated successfully
+
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  # ============================================================
+  # VEHICLES
+  # ============================================================
+
+  /drivers/me/vehicle:
+    get:
+      tags:
+        - Vehicles
+      summary: Get driver's vehicle
+      security:
+        - bearerAuth: []
+
+      responses:
+        '200':
+          description: Vehicle information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Vehicle'
+
+    put:
+      tags:
+        - Vehicles
+      summary: Update driver's vehicle
+      security:
+        - bearerAuth: []
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VehicleRequest'
+
+      responses:
+        '200':
+          description: Vehicle updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Vehicle'
+
+  # ============================================================
+  # LOCATION / FARE
+  # ============================================================
+
+  /locations/estimate:
+    post:
+      tags:
+        - Locations
+      summary: Calculate distance and estimated travel time
+      description: |
+        Calculate route distance and estimated travel time
+        between pickup and drop-off locations.
+
+      security:
+        - bearerAuth: []
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RouteRequest'
+
+      responses:
+        '200':
+          description: Route estimation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RouteEstimate'
+
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /bookings/estimate:
+    post:
+      tags:
+        - Bookings
+      summary: Estimate ride fare
+      description: |
+        Calculate estimated fare based on vehicle type
+        and route distance.
+
+      security:
+        - bearerAuth: []
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FareEstimateRequest'
+
+      responses:
+        '200':
+          description: Fare estimation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FareEstimate'
+
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  # ============================================================
+  # BOOKING
+  # ============================================================
+
+  /bookings:
+    post:
+      tags:
+        - Bookings
+      summary: Create a new ride booking
+      description: |
+        Customer creates a ride booking with pickup,
+        drop-off and requested vehicle type.
+      security:
+        - bearerAuth: []
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBookingRequest'
+
+      responses:
+        '201':
+          description: Booking created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Booking'
+
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    get:
+      tags:
+        - Bookings
+      summary: Get customer booking history
+      security:
+        - bearerAuth: []
+
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+
+      responses:
+        '200':
+          description: Booking history
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedBookings'
+
+  /bookings/{bookingId}:
+    get:
+      tags:
+        - Bookings
+      summary: Get booking details
+      security:
+        - bearerAuth: []
+
+      parameters:
+        - $ref: '#/components/parameters/BookingId'
+
+      responses:
+        '200':
+          description: Booking details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Booking'
+
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags:
+        - Bookings
+      summary: Cancel booking
+      description: Customer cancels a booking.
+      security:
+        - bearerAuth: []
+
+      parameters:
+        - $ref: '#/components/parameters/BookingId'
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CancelBookingRequest'
+
+      responses:
+        '200':
+          description: Booking cancelled successfully
+
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /bookings/{bookingId}/status:
+    get:
+      tags:
+        - Bookings
+      summary: Get current booking status
+      security:
+        - bearerAuth: []
+
+      parameters:
+        - $ref: '#/components/parameters/BookingId'
+
+      responses:
+        '200':
+          description: Current booking status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookingStatus'
+
+  # ============================================================
+  # DRIVER MATCHING
+  # ============================================================
+
+  /bookings/{bookingId}/match:
+    post:
+      tags:
+        - Driver Matching
+      summary: Start driver matching
+      description: |
+        Search for available drivers within the configured radius.
+        Drivers are prioritized by distance and rating.
+      security:
+        - bearerAuth: []
+
+      parameters:
+        - $ref: '#/components/parameters/BookingId'
+
+      responses:
+        '200':
+          description: Driver matching started
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MatchingResponse'
+
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /driver-requests:
+    get:
+      tags:
+        - Driver Matching
+      summary: Get pending ride requests for driver
+      description: |
+        Return ride requests assigned to the current driver.
+      security:
+        - bearerAuth: []
+
+      responses:
+        '200':
+          description: Pending driver requests
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DriverRequest'
+
+  /driver-requests/{requestId}/accept:
+    post:
+      tags:
+        - Driver Matching
+      summary: Accept ride request
+      description: |
+        Driver accepts a ride request within the allowed response time.
+      security:
+        - bearerAuth: []
+
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
+
+      responses:
+        '200':
+          description: Ride request accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Booking'
+
+        '409':
+          description: Request has expired or was already accepted
+
+  /driver-requests/{requestId}/reject:
+    post:
+      tags:
+        - Driver Matching
+      summary: Reject ride request
+      security:
+        - bearerAuth: []
+
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
+
+      responses:
+        '200':
+          description: Ride request rejected
+
+  # ============================================================
+  # TRIP STATUS
+  # ============================================================
+
+  /bookings/{bookingId}/start-pickup:
+    post:
+      tags:
+        - Bookings
+      summary: Driver starts traveling to pickup location
+      security:
+        - bearerAuth: []
+
+      parameters:
+        - $ref: '#/components/parameters/BookingId'
+
+      responses:
+        '200':
+          description: Booking status changed to DRIVER_ARRIVING
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Booking'
+
+  /bookings/{bookingId}/pickup:
+    post:
+      tags:
+        - Bookings
+      summary: Driver confirms passenger pickup
+      security:
+        - bearerAuth: []
+
+      parameters:
+        - $ref: '#/components/parameters/BookingId'
+
+      responses:
+        '200':
+          description: Passenger picked up
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Booking'
+
+  /bookings/{bookingId}/complete:
+    post:
+      tags:
+        - Bookings
+      summary: Complete trip
+      security:
+        - bearerAuth: []
+
+      parameters:
+        - $ref: '#/components/parameters/BookingId'
+
+      responses:
+        '200':
+          description: Trip completed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Booking'
+
+  # ============================================================
+  # PAYMENTS
+  # ============================================================
+
+  /bookings/{bookingId}/payment:
+    post:
+      tags:
+        - Payments
+      summary: Create payment for booking
+      security:
+        - bearerAuth: []
+
+      parameters:
+        - $ref: '#/components/parameters/BookingId'
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentRequest'
+
+      responses:
+        '201':
+          description: Payment created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /payments/{paymentId}:
+    get:
+      tags:
+        - Payments
+      summary: Get payment details
+      security:
+        - bearerAuth: []
+
+      parameters:
+        - $ref: '#/components/parameters/PaymentId'
+
+      responses:
+        '200':
+          description: Payment details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ============================================================
+  # REVIEWS
+  # ============================================================
+
+  /bookings/{bookingId}/review:
+    post:
+      tags:
+        - Reviews
+      summary: Rate and review driver
+      description: Customer rates driver after completed trip.
+      security:
+        - bearerAuth: []
+
+      parameters:
+        - $ref: '#/components/parameters/BookingId'
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateReviewRequest'
+
+      responses:
+        '201':
+          description: Review created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Review'
+
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  # ============================================================
+  # OPERATIONS
+  # ============================================================
+
+  /operations/bookings:
+    get:
+      tags:
+        - Operations
+      summary: Monitor active bookings
+      description: |
+        Operator can monitor active trips and their current statuses.
+      security:
+        - bearerAuth: []
+
+      parameters:
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/BookingStatusEnum'
+
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+
+      responses:
+        '200':
+          description: Active bookings
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedBookings'
+
+  /operations/drivers:
+    get:
+      tags:
+        - Operations
+      summary: Monitor driver status
+      security:
+        - bearerAuth: []
+
+      parameters:
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/DriverStatusEnum'
+
+      responses:
+        '200':
+          description: Driver status list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Driver'
+
+  /operations/bookings/{bookingId}/cancel:
+    post:
+      tags:
+        - Operations
+      summary: Operator cancels booking
+      security:
+        - bearerAuth: []
+
+      parameters:
+        - $ref: '#/components/parameters/BookingId'
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CancelBookingRequest'
+
+      responses:
+        '200':
+          description: Booking cancelled by operator
+
+  # ============================================================
+  # ADMINISTRATION
+  # ============================================================
+
+  /admin/users:
+    get:
+      tags:
+        - Administration
+      summary: Get users
+      security:
+        - bearerAuth: []
+
+      parameters:
+        - name: role
+          in: query
+          schema:
+            $ref: '#/components/schemas/UserRole'
+
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/UserStatus'
+
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+
+      responses:
+        '200':
+          description: User list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedUsers'
+
+  /admin/users/{userId}/status:
+    put:
+      tags:
+        - Administration
+      summary: Update user account status
+      security:
+        - bearerAuth: []
+
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserStatusRequest'
+
+      responses:
+        '200':
+          description: User status updated successfully
+
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /admin/drivers/{driverId}/approve:
+    post:
+      tags:
+        - Administration
+      summary: Approve driver
+      security:
+        - bearerAuth: []
+
+      parameters:
+        - name: driverId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+
+      responses:
+        '200':
+          description: Driver approved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Driver'
+
+  # ============================================================
+  # REPORTS
+  # ============================================================
+
+  /reports/dashboard:
+    get:
+      tags:
+        - Reports
+      summary: Get business dashboard
+      description: |
+        Management dashboard containing revenue,
+        completed trips and cancellation rate.
+      security:
+        - bearerAuth: []
+
+      parameters:
+        - name: from
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+
+        - name: to
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+
+      responses:
+        '200':
+          description: Dashboard report
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardReport'
+
+  /reports/revenue:
+    get:
+      tags:
+        - Reports
+      summary: Get revenue report
+      security:
+        - bearerAuth: []
+
+      parameters:
+        - name: from
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+
+        - name: to
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+
+      responses:
+        '200':
+          description: Revenue report
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RevenueReport'
+
+# ==============================================================
+# COMPONENTS
+# ==============================================================
+
+components:
+
+  # ------------------------------------------------------------
+  # SECURITY
+  # ------------------------------------------------------------
+
+  securitySchemes:
+
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT authentication token
+
+  # ------------------------------------------------------------
+  # PARAMETERS
+  # ------------------------------------------------------------
+
+  parameters:
+
+    BookingId:
+      name: bookingId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+      example: 10001
+
+    RequestId:
+      name: requestId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+      example: 50001
+
+    UserId:
+      name: userId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+      example: 1001
+
+    PaymentId:
+      name: paymentId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+      example: 70001
+
+    Page:
+      name: page
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+
+    Limit:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+
+  # ------------------------------------------------------------
+  # RESPONSES
+  # ------------------------------------------------------------
+
+  responses:
+
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    Unauthorized:
+      description: Authentication required
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+  # ------------------------------------------------------------
+  # SCHEMAS
+  # ------------------------------------------------------------
+
+  schemas:
+
+    # ==========================================================
+    # AUTH
+    # ==========================================================
+
+    RegisterRequest:
+      type: object
+      required:
+        - name
+        - email
+        - password
+        - phone
+      properties:
+        name:
+          type: string
+          example: Nguyen Van Nam
+
+        email:
+          type: string
+          format: email
+          example: nam@example.com
+
+        password:
+          type: string
+          format: password
+          minLength: 8
+          example: Password123
+
+        phone:
+          type: string
+          example: "0901234567"
+
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: nam@example.com
+
+        password:
+          type: string
+          format: password
+          example: Password123
+
+    AuthResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIs...
+
+        tokenType:
+          type: string
+          example: Bearer
+
+        expiresIn:
+          type: integer
+          example: 3600
+
+        user:
+          $ref: '#/components/schemas/User'
+
+    # ==========================================================
+    # USER
+    # ==========================================================
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1001
+
+        name:
+          type: string
+          example: Nguyen Van Nam
+
+        email:
+          type: string
+          format: email
+          example: nam@example.com
+
+        phone:
+          type: string
+          example: "0901234567"
+
+        role:
+          $ref: '#/components/schemas/UserRole'
+
+        status:
+          $ref: '#/components/schemas/UserStatus'
+
+        createdAt:
+          type: string
+          format: date-time
+          example: "2026-09-07T10:00:00Z"
+
+    UserRole:
+      type: string
+      enum:
+        - CUSTOMER
+        - DRIVER
+        - OPERATOR
+        - ADMIN
+        - MANAGEMENT
+
+    UserStatus:
+      type: string
+      enum:
+        - ACTIVE
+        - INACTIVE
+        - SUSPENDED
+        - BLOCKED
+
+    UserStatusRequest:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          $ref: '#/components/schemas/UserStatus'
+
+        reason:
+          type: string
+          example: Account violation
+
+    # ==========================================================
+    # CUSTOMER
+    # ==========================================================
+
+    Customer:
+      allOf:
+        - $ref: '#/components/schemas/User'
+        - type: object
+          properties:
+            totalTrips:
+              type: integer
+              example: 25
+
+    UpdateCustomerRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          example: Nguyen Van Nam
+
+        phone:
+          type: string
+          example: "0901234567"
+
+    # ==========================================================
+    # DRIVER
+    # ==========================================================
+
+    Driver:
+      allOf:
+        - $ref: '#/components/schemas/User'
+        - type: object
+          properties:
+            rating:
+              type: number
+              format: float
+              minimum: 0
+              maximum: 5
+              example: 4.8
+
+            status:
+              $ref: '#/components/schemas/DriverStatusEnum'
+
+            vehicle:
+              $ref: '#/components/schemas/Vehicle'
+
+    DriverRegistrationRequest:
+      type: object
+      required:
+        - name
+        - email
+        - password
+        - phone
+        - vehicle
+      properties:
+        name:
+          type: string
+          example: Nguyen Van Nam
+
+        email:
+          type: string
+          format: email
+          example: driver@example.com
+
+        password:
+          type: string
+          format: password
+          example: Password123
+
+        phone:
+          type: string
+          example: "0901234567"
+
+        vehicle:
+          $ref: '#/components/schemas/VehicleRequest'
+
+    UpdateDriverRequest:
+      type: object
+      properties:
+        name:
+          type: string
+
+        phone:
+          type: string
+
+    DriverStatusRequest:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          $ref: '#/components/schemas/DriverStatusEnum'
+
+    DriverStatusEnum:
+      type: string
+      enum:
+        - ONLINE
+        - OFFLINE
+        - BUSY
+        - SUSPENDED
+
+    # ==========================================================
+    # VEHICLE
+    # ==========================================================
+
+    Vehicle:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 2001
+
+        type:
+          $ref: '#/components/schemas/VehicleType'
+
+        licensePlate:
+          type: string
+          example: "51A-123.45"
+
+        brand:
+          type: string
+          example: Toyota
+
+        model:
+          type: string
+          example: Vios
+
+        color:
+          type: string
+          example: White
+
+    VehicleRequest:
+      type: object
+      required:
+        - type
+        - licensePlate
+      properties:
+        type:
+          $ref: '#/components/schemas/VehicleType'
+
+        licensePlate:
+          type: string
+          example: "51A-123.45"
+
+        brand:
+          type: string
+          example: Toyota
+
+        model:
+          type: string
+          example: Vios
+
+        color:
+          type: string
+          example: White
+
+    VehicleType:
+      type: string
+      enum:
+        - MOTORBIKE
+        - CAR_4_SEATS
+        - CAR_7_SEATS
+
+    # ==========================================================
+    # LOCATION
+    # ==========================================================
+
+    LocationRequest:
+      type: object
+      required:
+        - latitude
+        - longitude
+      properties:
+        latitude:
+          type: number
+          format: double
+          example: 10.762622
+
+        longitude:
+          type: number
+          format: double
+          example: 106.660172
+
+    Location:
+      type: object
+      properties:
+        latitude:
+          type: number
+          format: double
+          example: 10.762622
+
+        longitude:
+          type: number
+          format: double
+          example: 106.660172
+
+        address:
+          type: string
+          example: 227 Nguyen Van Cu, District 5, Ho Chi Minh City
+
+    RouteRequest:
+      type: object
+      required:
+        - pickup
+        - dropoff
+      properties:
+        pickup:
+          $ref: '#/components/schemas/Location'
+
+        dropoff:
+          $ref: '#/components/schemas/Location'
+
+    RouteEstimate:
+      type: object
+      properties:
+        distanceKm:
+          type: number
+          format: double
+          example: 8.5
+
+        estimatedDurationMinutes:
+          type: integer
+          example: 25
+
+    # ==========================================================
+    # FARE
+    # ==========================================================
+
+    FareEstimateRequest:
+      type: object
+      required:
+        - vehicleType
+        - pickup
+        - dropoff
+      properties:
+        vehicleType:
+          $ref: '#/components/schemas/VehicleType'
+
+        pickup:
+          $ref: '#/components/schemas/Location'
+
+        dropoff:
+          $ref: '#/components/schemas/Location'
+
+    FareEstimate:
+      type: object
+      properties:
+        vehicleType:
+          $ref: '#/components/schemas/VehicleType'
+
+        distanceKm:
+          type: number
+          format: double
+          example: 8.5
+
+        estimatedDurationMinutes:
+          type: integer
+          example: 25
+
+        baseFare:
+          type: number
+          format: double
+          example: 15000
+
+        distanceFare:
+          type: number
+          format: double
+          example: 70000
+
+        estimatedFare:
+          type: number
+          format: double
+          example: 85000
+
+        currency:
+          type: string
+          example: VND
+
+    # ==========================================================
+    # BOOKING
+    # ==========================================================
+
+    CreateBookingRequest:
+      type: object
+      required:
+        - pickup
+        - dropoff
+        - vehicleType
+        - paymentMethod
+      properties:
+        pickup:
+          $ref: '#/components/schemas/Location'
+
+        dropoff:
+          $ref: '#/components/schemas/Location'
+
+        vehicleType:
+          $ref: '#/components/schemas/VehicleType'
+
+        paymentMethod:
+          $ref: '#/components/schemas/PaymentMethod'
+
+    Booking:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 10001
+
+        customer:
+          $ref: '#/components/schemas/Customer'
+
+        driver:
+          $ref: '#/components/schemas/Driver'
+
+        pickup:
+          $ref: '#/components/schemas/Location'
+
+        dropoff:
+          $ref: '#/components/schemas/Location'
+
+        vehicleType:
+          $ref: '#/components/schemas/VehicleType'
+
+        estimatedFare:
+          type: number
+          format: double
+          example: 85000
+
+        finalFare:
+          type: number
+          format: double
+          example: 90000
+
+        status:
+          $ref: '#/components/schemas/BookingStatusEnum'
+
+        paymentMethod:
+          $ref: '#/components/schemas/PaymentMethod'
+
+        createdAt:
+          type: string
+          format: date-time
+
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    BookingStatusEnum:
+      type: string
+      enum:
+        - SEARCHING_DRIVER
+        - DRIVER_ASSIGNED
+        - DRIVER_ARRIVING
+        - DRIVER_ARRIVED
+        - PASSENGER_PICKED_UP
+        - IN_PROGRESS
+        - COMPLETED
+        - CANCELLED
+
+    BookingStatus:
+      type: object
+      properties:
+        bookingId:
+          type: integer
+          example: 10001
+
+        status:
+          $ref: '#/components/schemas/BookingStatusEnum'
+
+        updatedAt:
+          type: string
+          format: date-time
+
+    CancelBookingRequest:
+      type: object
+      required:
+        - reason
+      properties:
+        reason:
+          type: string
+          example: Customer changed plan
+
+    PaginatedBookings:
+      type: object
+      properties:
+        page:
+          type: integer
+          example: 1
+
+        limit:
+          type: integer
+          example: 20
+
+        total:
+          type: integer
+          example: 100
+
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Booking'
+
+    # ==========================================================
+    # DRIVER MATCHING
+    # ==========================================================
+
+    MatchingResponse:
+      type: object
+      properties:
+        bookingId:
+          type: integer
+          example: 10001
+
+        status:
+          type: string
+          example: SEARCHING_DRIVER
+
+        driversFound:
+          type: integer
+          example: 5
+
+        searchRadiusKm:
+          type: number
+          format: double
+          example: 5
+
+    DriverRequest:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 50001
+
+        booking:
+          $ref: '#/components/schemas/Booking'
+
+        expiresAt:
+          type: string
+          format: date-time
+          example: "2026-09-07T10:05:00Z"
+
+    # ==========================================================
+    # PAYMENT
+    # ==========================================================
+
+    PaymentMethod:
+      type: string
+      enum:
+        - CASH
+        - CARD
+        - E_WALLET
+
+    PaymentStatus:
+      type: string
+      enum:
+        - PENDING
+        - SUCCESS
+        - FAILED
+        - REFUNDED
+
+    PaymentRequest:
+      type: object
+      required:
+        - paymentMethod
+      properties:
+        paymentMethod:
+          $ref: '#/components/schemas/PaymentMethod'
+
+    Payment:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 70001
+
+        bookingId:
+          type: integer
+          example: 10001
+
+        amount:
+          type: number
+          format: double
+          example: 90000
+
+        currency:
+          type: string
+          example: VND
+
+        method:
+          $ref: '#/components/schemas/PaymentMethod'
+
+        status:
+          $ref: '#/components/schemas/PaymentStatus'
+
+        transactionId:
+          type: string
+          nullable: true
+          example: TXN-20260907-00001
+
+        createdAt:
+          type: string
+          format: date-time
+
+    # ==========================================================
+    # REVIEW
+    # ==========================================================
+
+    CreateReviewRequest:
+      type: object
+      required:
+        - rating
+      properties:
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+          example: 5
+
+        comment:
+          type: string
+          example: Driver was friendly and arrived on time.
+
+    Review:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 90001
+
+        bookingId:
+          type: integer
+          example: 10001
+
+        customerId:
+          type: integer
+          example: 1001
+
+        driverId:
+          type: integer
+          example: 3001
+
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+          example: 5
+
+        comment:
+          type: string
+          example: Very good service.
+
+        createdAt:
+          type: string
+          format: date-time
+
+    # ==========================================================
+    # ADMIN / PAGINATION
+    # ==========================================================
+
+    PaginatedUsers:
+      type: object
+      properties:
+        page:
+          type: integer
+          example: 1
+
+        limit:
+          type: integer
+          example: 20
+
+        total:
+          type: integer
+          example: 100
+
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+
+    # ==========================================================
+    # REPORT
+    # ==========================================================
+
+    DashboardReport:
+      type: object
+      properties:
+        from:
+          type: string
+          format: date
+
+        to:
+          type: string
+          format: date
+
+        totalTrips:
+          type: integer
+          example: 12500
+
+        completedTrips:
+          type: integer
+          example: 11000
+
+        cancelledTrips:
+          type: integer
+          example: 1500
+
+        cancellationRate:
+          type: number
+          format: double
+          example: 12.0
+
+        totalRevenue:
+          type: number
+          format: double
+          example: 950000000
+
+        currency:
+          type: string
+          example: VND
+
+    RevenueReport:
+      type: object
+      properties:
+        from:
+          type: string
+          format: date
+
+        to:
+          type: string
+          format: date
+
+        totalRevenue:
+          type: number
+          format: double
+          example: 950000000
+
+        totalTransactions:
+          type: integer
+          example: 11000
+
+        currency:
+          type: string
+          example: VND
+
+    # ==========================================================
+    # ERROR
+    # ==========================================================
+
+    ErrorResponse:
+      type: object
+      properties:
+        code:
+          type: string
+          example: BAD_REQUEST
+
+        message:
+          type: string
+          example: Invalid request data
+
+        timestamp:
+          type: string
+          format: date-time
